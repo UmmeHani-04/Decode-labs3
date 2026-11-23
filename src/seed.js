@@ -1,0 +1,11 @@
+const { openDb } = require('./db');
+const db = openDb();
+db.exec('DELETE FROM tasks; DELETE FROM users;');
+const u = db.prepare('INSERT INTO users (name, email) VALUES (?, ?)');
+const t = db.prepare('INSERT INTO tasks (user_id, title, status, priority) VALUES (?, ?, ?, ?)');
+const alice = u.run('Alice', 'alice@email.com').lastInsertRowid;
+const bob = u.run('Bob', 'bob@email.com').lastInsertRowid;
+t.run(alice, 'Design the schema', 'done', 1);
+t.run(alice, 'Write CRUD endpoints', 'in_progress', 1);
+t.run(bob, 'Test SQL injection defences', 'todo', 2);
+console.log('Seeded 2 users and 3 tasks');

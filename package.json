@@ -1,0 +1,8 @@
+{
+  "name": "project3-database-integration",
+  "version": "1.0.0",
+  "description": "DecodeLabs Project 3: Database Integration (Express + SQLite)",
+  "main": "src/server.js",
+  "scripts": { "start": "node src/server.js", "test": "node test/smoke.test.js" },
+  "dependencies": { "better-sqlite3": "^11.3.0", "express": "^4.19.2" }
+}

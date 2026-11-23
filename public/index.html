@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tasks DB Demo</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:640px;margin:2rem auto;padding:0 1rem;background:#F2F0EA;color:#3A2C24}
+input,select,button{font:inherit;padding:.5rem;margin:.2rem 0}button{background:#6B4E3D;color:#fff;border:0;border-radius:6px;cursor:pointer}
+li{background:#fff;padding:.6rem;margin:.4rem 0;border-radius:8px;display:flex;justify-content:space-between;gap:.5rem}
+#err{color:#9B2C2C;font-weight:600}
+</style></head><body>
+<h1>Tasks (SQLite)</h1>
+<h2>Add user</h2>
+<input id="un" placeholder="Name"> <input id="ue" placeholder="Email"> <button id="addU">Add user</button>
+<h2>Add task</h2>
+<select id="tu"></select> <input id="tt" placeholder="Task title"> <button id="addT">Add task</button>
+<p id="err" role="alert"></p>
+<ul id="list"></ul>
+<script>
+const $=s=>document.querySelector(s), err=$('#err');
+async function api(p,o={}){const r=await fetch('/api'+p,{headers:{'Content-Type':'application/json'},...o});
+  if(r.status===204)return null;const d=await r.json();if(!r.ok)throw new Error((d.details||[d.error]).join(', '));return d}
+async function load(){
+  const [users,tasks]=await Promise.all([api('/users'),api('/tasks')]);
+  $('#tu').innerHTML=users.map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join('');
+  const name=Object.fromEntries(users.map(u=>[u.id,u.name]));
+  $('#list').innerHTML=tasks.map(t=>`<li><span>${esc(t.title)} <small>(${esc(name[t.user_id])}, ${t.status})</small></span>
+   <span><button data-a="done" data-id="${t.id}">Done</button> <button data-a="del" data-id="${t.id}">Delete</button></span></li>`).join('')}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const run=async f=>{try{err.textContent='';await f();await load()}catch(e){err.textContent=e.message}};
+$('#addU').onclick=()=>run(()=>api('/users',{method:'POST',body:JSON.stringify({name:$('#un').value,email:$('#ue').value})}));
+$('#addT').onclick=()=>run(()=>api('/tasks',{method:'POST',body:JSON.stringify({user_id:Number($('#tu').value),title:$('#tt').value})}));
+$('#list').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  run(()=>b.dataset.a==='del'?api('/tasks/'+b.dataset.id,{method:'DELETE'}):api('/tasks/'+b.dataset.id,{method:'PATCH',body:JSON.stringify({status:'done'})}))};
+run(async()=>{});
+</script></body></html>
